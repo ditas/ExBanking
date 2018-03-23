@@ -45,13 +45,13 @@ defmodule ExBanking do
         current_users = Map.get(state, :users)
         {_, pid} = List.keyfind(current_users, user_name, 0)
 
-#        q_len = Process.info(pid, :message_queue_len)
-#        IO.inspect(q_len)
-        :erlang.process_info(pid, :messages) |> IO.inspect
+        :erlang.process_info(pid, :message_queue_len) |> IO.inspect
 
-        User.user_test(pid)
-
-        IO.puts("TEST FINISHED")
+        {_, q_len} = Process.info(pid, :message_queue_len)
+        case q_len < 2 do
+            true -> User.user_test(pid)
+            false -> IO.puts("TO MANY REQUESTS!")
+        end
 
         {:noreply, state}
     end
