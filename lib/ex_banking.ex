@@ -47,11 +47,12 @@ defmodule ExBanking do
 
         :erlang.process_info(pid, :message_queue_len) |> IO.inspect
 
-        {_, q_len} = Process.info(pid, :message_queue_len)
-        case q_len + 1 <= 2 do
-            true -> User.user_test(pid)
-            false -> IO.puts("TO MANY REQUESTS!")
-        end
+#        {_, q_len} = Process.info(pid, :message_queue_len)
+#        case q_len + 1 <= 2 do
+#            true -> User.user_test(pid)
+#            false -> IO.puts("TO MANY REQUESTS!")
+#        end
+        User.user_test(pid)
 
         {:noreply, state}
     end

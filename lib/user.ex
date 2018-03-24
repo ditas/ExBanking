@@ -31,7 +31,21 @@ defmodule User do
 
     #################### External functions ####################
     def user_test(pid) do
-        GenServer.cast(pid, :test)
+        case check_queue(pid) do
+            :ok -> GenServer.cast(pid, :test)
+            error -> error
+        end
+        
+#        GenServer.cast(pid, :test)
     end
-
+    
+    #################### Internal functions ####################
+    defp check_queue(pid) do
+        {_, q_len} = Process.info(pid, :message_queue_len)
+        case q_len + 1 <= 2 do
+            true -> :ok
+            false -> {:error, :too_many_requests_to_user}
+        end
+    end
+    
 end
