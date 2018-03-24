@@ -16,9 +16,7 @@ defmodule ExBanking do
     def handle_call({:create_user, user_name}, _from, state) when is_bitstring(user_name) do
         current_users = Map.get(state, :users)
 
-#        :timer.sleep(4000)
-
-        IO.inspect(current_users)
+#        IO.inspect(current_users)
 
         {reply, state1} = case List.keymember?(current_users, user_name, 0) do
             true -> {{:error, :user_already_exists}, state}
@@ -34,21 +32,10 @@ defmodule ExBanking do
         {:reply, reply, state1}
     end
     def handle_call({:test, user_name}, _from, state) do
-    
-        #        :timer.sleep(4000)
-    
-        IO.puts("-----1")
-    
         current_users = Map.get(state, :users)
         {_, pid} = List.keyfind(current_users, user_name, 0)
     
         :erlang.process_info(pid, :message_queue_len) |> IO.inspect
-    
-        #        {_, q_len} = Process.info(pid, :message_queue_len)
-        #        case q_len + 1 <= 2 do
-        #            true -> User.user_test(pid)
-        #            false -> IO.puts("TO MANY REQUESTS!")
-        #        end
         reply = User.user_test(pid)
 #                |> IO.inspect()
     
@@ -69,15 +56,11 @@ defmodule ExBanking do
     #################### External functions ####################
     def create_user(user_name) do
         GenServer.call(__MODULE__, {:create_user, user_name})
-        IO.puts("TEST0")
+#        IO.puts("TEST0")
     end
 
     def test(user_name) do
         GenServer.call(__MODULE__, {:test, user_name})
 #        IO.puts("TEST STARTED")
-    end
-    
-    def test1() do
-        GenServer.call(__MODULE__, :test1)
     end
 end
