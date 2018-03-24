@@ -31,10 +31,16 @@ defmodule User do
 
     #################### External functions ####################
     def user_test(pid) do
-        case check_queue(pid) do
+        
+        IO.puts("----2")
+        
+        res = case check_queue(pid) do
             :ok -> GenServer.cast(pid, :test)
             error -> error
         end
+        
+#        IO.inspect(res)
+        res
         
 #        GenServer.cast(pid, :test)
     end
