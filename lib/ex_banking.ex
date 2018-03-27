@@ -25,13 +25,13 @@ defmodule ExBanking do
     #################### External functions ####################
     def create_user(user_name) when is_bitstring(user_name) do
         case :ets.lookup(@ets_table, user_name) do
-            [{user_name, pid}|_] when pid != :undefined ->
+            [{user_name, pid, _queue}|_] when pid != :undefined ->
                 {:error, :user_already_exists}
             _ ->
                 try do
                     {:ok, pid} = User.start(user_name)
                     Process.monitor(pid)
-                    :ets.insert(@ets_table, {user_name, pid})
+                    :ets.insert(@ets_table, {user_name, pid, []})
                     :ok
                 rescue
                     e in ArgumentError -> {:error, e}
@@ -44,9 +44,8 @@ defmodule ExBanking do
 
     def deposit(user_name, amount, currency) when is_number(amount) do
         case :ets.lookup(@ets_table, user_name) do
-            [{user_name, pid}|_] when pid != :undefined ->
+            [{user_name, pid, _queue}|_] when pid != :undefined ->
                 User.deposit(pid, amount, currency)
-                try_get_last_reply(user_name)
             _ ->
                 {:error, :user_does_not_exist}
         end
@@ -57,8 +56,12 @@ defmodule ExBanking do
 
     def withdraw(user_name, amount, currency) when is_number(amount) do
         case :ets.lookup(@ets_table, user_name) do
-            [{user_name, pid}|_] when pid != :undefined ->
-                User.withdraw(pid, amount, currency)
+            [{user_name, pid, queue}|_] when pid != :undefined and length(queue) <= 2 ->
+#                reply = User.withdraw(pid, amount, currency)
+
+                new_queue = [{:withdraw, amount, currency}|queue]
+                :ets.insert(@ets_table, {user_name, pid, new_queue})
+                User.execute(pid, new_queue)
             _ ->
                 {:error, :user_does_not_exist}
         end
@@ -67,14 +70,7 @@ defmodule ExBanking do
         {:error, :wrong_arguments}
     end
 
-    defp try_get_last_reply(user_name) do
-#        case :ets.lookup(@ets_table, user_name) do
-#            [{_user_name, _pid, last_reply}|_] when last_reply != :undefined -> last_reply
-#            _ -> nil
-#        end
-        [{_user_name, _pid, last_reply}|_] = :ets.lookup(@ets_table, user_name)
-        last_reply
-    end
+
 
     def test(user_name) do
         case :ets.lookup(@ets_table, user_name) do

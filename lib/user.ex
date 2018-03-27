@@ -9,10 +9,25 @@ defmodule User do
 
     def init(state) do
         {:ok, acc_pid} = Account.start()
-        {:ok, Map.put(state, :account, acc_pid)}
+        {:ok, Map.put(state, :account, acc_pid)
+            |> Map.put(:currency_amount, [])}
     end
 
     #################### Call ####################
+    def handle_call({:withdraw, amount, currency}, _from, state) do
+
+        :timer.sleep(4000)
+
+        currencies_amounts = Map.get(state, :currency_amount)
+        {reply, state1} = case List.keyfind(currencies_amounts, currency, 0) do
+            {currency, current_amount} when current_amount >= amount ->
+                new_amount = current_amount - amount
+                {{:ok, new_balance: new_amount}, Map.put(state, :currency_amount, List.keyreplace(currencies_amounts, currency, 0, {currency, new_amount}))}
+            _ ->
+                {{:error, :not_enough_money}, state}
+        end
+        {:reply, reply, state1}
+    end
     def handle_call(_msg, _from, state) do
         {:reply, :ok, state}
     end
@@ -39,6 +54,12 @@ defmodule User do
     end
 
     #################### External functions ####################
+    def execute(pid, queue) do
+        [h|t] = :lists.reverse(queue)
+        GenServer.call(pid, h)
+    end
+
+
     def deposit(pid, amount, currency) do
         case check_queue(pid) do
             :ok -> GenServer.cast(pid, {:deposit, amount, currency})
