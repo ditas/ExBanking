@@ -4,58 +4,15 @@ defmodule ExBanking do
     @ets_table :users
 
     def start_link() do
-    
-        IO.puts("------0")
-        
         GenServer.start_link(__MODULE__, [], name: __MODULE__)
     end
 
     def init(_) do
-        
-        IO.puts("------1")
-        
-        @ets_table = :ets.new(@ets_table, [:set, :protected, :named_table])
-
-        IO.puts("------2")
-        
+        @ets_table = :ets.new(@ets_table, [:set, :public, :named_table])
         {:ok, []}
     end
 
     #################### Call ####################
-    def handle_call(:test1, _from, state) do
-        {:reply, {:test1}, state}
-    end
-#    def handle_call({:create_user, user_name}, _from, state) when is_bitstring(user_name) do
-#        current_users = Map.get(state, :users)
-#
-##        IO.inspect(current_users)
-#
-#        {reply, state1} = case List.keymember?(current_users, user_name, 0) do
-#            true -> {{:error, :user_already_exists}, state}
-#            false ->
-#                try do
-#                    {:ok, pid} = User.start(user_name)
-#                    Process.monitor(pid)
-#                    {:ok, Map.put(state, :users, [{user_name, pid}|current_users])}
-#                rescue
-#                    e in ArgumentError -> {{:error, :wrong_arguments}, state}
-#                end
-#        end
-#        {:reply, reply, state1}
-#    end
-#    def handle_call({:create_user, _user_name}, _from, state) do
-#        {:reply, {:error, :wrong_arguments}, state}
-#    end
-#    def handle_call({:test, user_name}, _from, state) do
-#        current_users = Map.get(state, :users)
-#        {_, pid} = List.keyfind(current_users, user_name, 0)
-#
-#        :erlang.process_info(pid, :message_queue_len) |> IO.inspect
-#        reply = User.user_test(pid)
-##                |> IO.inspect()
-#
-#        {:reply, reply, state}
-#    end
     def handle_call(_msg, _from, state) do
         {:reply, :ok, state}
     end
@@ -67,7 +24,6 @@ defmodule ExBanking do
 
     #################### External functions ####################
     def create_user(user_name) when is_bitstring(user_name) do
-#        GenServer.call(__MODULE__, {:create_user, user_name})
         case :ets.lookup(@ets_table, user_name) do
             [{user_name, pid}|_] when pid != :undefined ->
                 {:error, :user_already_exists}
@@ -82,12 +38,45 @@ defmodule ExBanking do
                 end
         end
     end
-    def create_user(user_name) do
+    def create_user(_user_name) do
         {:error, :wrong_arguments}
     end
 
+    def deposit(user_name, amount, currency) when is_number(amount) do
+        case :ets.lookup(@ets_table, user_name) do
+            [{user_name, pid}|_] when pid != :undefined ->
+                User.deposit(pid, amount, currency)
+                try_get_last_reply(user_name)
+            _ ->
+                {:error, :user_does_not_exist}
+        end
+    end
+    def deposit(_user_name, _amount, _currency) do
+        {:error, :wrong_arguments}
+    end
+
+    def withdraw(user_name, amount, currency) when is_number(amount) do
+        case :ets.lookup(@ets_table, user_name) do
+            [{user_name, pid}|_] when pid != :undefined ->
+                User.withdraw(pid, amount, currency)
+            _ ->
+                {:error, :user_does_not_exist}
+        end
+    end
+    def withdraw(_user_name, _amount, _currency) do
+        {:error, :wrong_arguments}
+    end
+
+    defp try_get_last_reply(user_name) do
+#        case :ets.lookup(@ets_table, user_name) do
+#            [{_user_name, _pid, last_reply}|_] when last_reply != :undefined -> last_reply
+#            _ -> nil
+#        end
+        [{_user_name, _pid, last_reply}|_] = :ets.lookup(@ets_table, user_name)
+        last_reply
+    end
+
     def test(user_name) do
-#        GenServer.call(__MODULE__, {:test, user_name})
         case :ets.lookup(@ets_table, user_name) do
             [{_, pid}|_] when pid != :undefined ->
                 :erlang.process_info(pid, :message_queue_len) |> IO.inspect

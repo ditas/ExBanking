@@ -1,9 +1,10 @@
 defmodule User do
     use GenServer
 
+    @ets_table :users
+
     def start(name) do
-#        GenServer.start(__MODULE__, %{}, name: name)
-        GenServer.start(__MODULE__, %{})
+        GenServer.start(__MODULE__, %{:name => name})
     end
 
     def init(state) do
@@ -17,12 +18,20 @@ defmodule User do
     end
 
     #################### Cast ####################
+    def handle_cast({:deposit, amount, currency}, state) do
+        last_reply = Account.deposit(Map.get(state, :account), amount, currency)
+        :ets.insert(@ets_table, {Map.get(state, :name), self(), last_reply})
+        {:noreply, state}
+    end
+    def handle_cast({:withdraw, amount, currency}, state) do
+        Account.withdraw(Map.get(state, :account), amount, currency)
+        {:noreply, state}
+    end
+
+
+
     def handle_cast(:test, state) do
-
-#        :timer.sleep(4000)
-#        IO.puts("TEST FINISHED")
         Account.acc_test(Map.get(state, :account))
-
         {:noreply, state}
     end
     def handle_cast(_msg, state) do
@@ -30,6 +39,22 @@ defmodule User do
     end
 
     #################### External functions ####################
+    def deposit(pid, amount, currency) do
+        case check_queue(pid) do
+            :ok -> GenServer.cast(pid, {:deposit, amount, currency})
+            error -> error
+        end
+    end
+
+    def withdraw(pid, amount, currency) do
+        case check_queue(pid) do
+            :ok -> GenServer.cast(pid, {:withdraw, amount, currency})
+            error -> error
+        end
+    end
+
+
+
     def user_test(pid) do
         case check_queue(pid) do
             :ok -> GenServer.cast(pid, :test)
