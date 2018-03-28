@@ -10,7 +10,7 @@ defmodule User do
     end
 
     #################### Call ####################
-    def handle_call({{:deposit, amount, currency}, queue}, _from, state) do
+    def handle_call({:deposit, amount, currency}, _from, state) do
 
         :timer.sleep(3000)
 
@@ -22,9 +22,9 @@ defmodule User do
             _ ->
                 {amount, Map.put(state, :account, [{currency, amount}|account])}
         end
-        {:reply, {{:ok, new_balance: new_amount}, queue}, state1}
+        {:reply, {:ok, new_balance: new_amount}, state1}
     end
-    def handle_call({{:withdraw, amount, currency}, queue}, _from, state) do
+    def handle_call({:withdraw, amount, currency}, _from, state) do
 
 #        :timer.sleep(3000)
 
@@ -36,9 +36,9 @@ defmodule User do
             _ ->
                 {{:error, :not_enough_money}, state}
         end
-        {:reply, {reply, queue}, state1}
+        {:reply, reply, state1}
     end
-    def handle_call({{:get_balance, currency}, queue}, _from, state) do
+    def handle_call({:get_balance, currency}, _from, state) do
         account = Map.get(state, :account)
         reply = case List.keyfind(account, currency, 0) do
             {currency, current_amount} ->
@@ -46,7 +46,7 @@ defmodule User do
             _ ->
                 {:error, :wrong_arguments}
         end
-        {:reply, {reply, queue}, state}
+        {:reply, reply, state}
     end
     def handle_call(_msg, _from, state) do
         {:reply, :ok, state}
@@ -60,6 +60,7 @@ defmodule User do
     #################### External functions ####################
     def execute(pid, queue) do
         [h|t] = :lists.reverse(queue)
-        GenServer.call(pid, {h, t})
+        reply = GenServer.call(pid, h)
+        {reply, t}
     end
 end
