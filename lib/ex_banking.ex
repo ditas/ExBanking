@@ -61,6 +61,9 @@ defmodule ExBanking do
     defp try_execute(user_name, message) do
         case :ets.lookup(@ets_table, user_name) do
             [{user_name, pid, queue}|_] when pid != :undefined ->
+
+                IO.inspect(length(queue))
+
                 case length(queue) < @queue_limit do
                     true ->
                         queue1 = [message|queue]
@@ -79,18 +82,4 @@ defmodule ExBanking do
                 {:error, :user_does_not_exist}
         end
     end
-
-
-
-#    def test(user_name) do
-#        case :ets.lookup(@ets_table, user_name) do
-#            [{_, pid}|_] when pid != :undefined ->
-#                :erlang.process_info(pid, :message_queue_len) |> IO.inspect
-#                reply = User.user_test(pid)
-##                    |> IO.inspect()
-#                reply
-#            _ ->
-#                {:error, :oops!}
-#        end
-#    end
 end
