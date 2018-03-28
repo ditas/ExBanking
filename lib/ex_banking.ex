@@ -57,6 +57,39 @@ defmodule ExBanking do
         {:error, :wrong_arguments}
     end
 
+    def get_balance(user_name, currency) do
+        try_execute(user_name, {:get_balance, currency})
+    end
+
+    def send(from_user, to_user, amount, currency) when is_number(amount) do
+        case try_execute(from_user, {:withdraw, amount, currency}) do
+            {:ok, [new_balance: from_balance]} ->
+                case try_execute(to_user, {:deposit, amount, currency}) do
+                    {:ok, [new_balance: to_balance]} ->
+                        {:ok, from_user_balance: from_balance, to_user_balance: to_balance}
+                    {:error, :user_does_not_exist} ->
+                        {:error, :receiver_does_not_exist}
+                    {:error, :too_many_requests_to_user} ->
+                        {:error, :too_many_requests_to_receiver}
+                    error ->
+                        error
+                end
+            {:error, :user_does_not_exist} ->
+                {:error, :sender_does_not_exist}
+            {:error, :too_many_requests_to_user} ->
+                {:error, :too_many_requests_to_sender}
+            error ->
+                error
+        end
+    end
+    def send(_from_user, _to_user, _amount, _currency) do
+        {:error, :wrong_arguments}
+    end
+
+    def clear() do
+        :ets.delete_all_objects(@ets_table)
+    end
+
     #################### Internal functions ####################
     defp try_execute(user_name, message) do
         case :ets.lookup(@ets_table, user_name) do
@@ -72,7 +105,10 @@ defmodule ExBanking do
                             {{:ok, reply}, queue2} ->
                                 :ets.insert(@ets_table, {user_name, pid, queue2})
                                 {:ok, reply}
-                            {error, _queue2} ->
+                            {{:error, :too_many_requests_to_user} = error, _queue2} ->
+                                error
+                            {error, queue2} ->
+                                :ets.insert(@ets_table, {user_name, pid, queue2})
                                 error
                         end
                     false ->

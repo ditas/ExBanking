@@ -38,6 +38,16 @@ defmodule User do
         end
         {:reply, {reply, queue}, state1}
     end
+    def handle_call({{:get_balance, currency}, queue}, _from, state) do
+        account = Map.get(state, :account)
+        reply = case List.keyfind(account, currency, 0) do
+            {currency, current_amount} ->
+                {:ok, balance: current_amount}
+            _ ->
+                {:error, :wrong_arguments}
+        end
+        {:reply, {reply, queue}, state}
+    end
     def handle_call(_msg, _from, state) do
         {:reply, :ok, state}
     end
