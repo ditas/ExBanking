@@ -100,7 +100,7 @@ defmodule ExBanking do
     end
 
     defp execute(user_name, message) do
-        [{user_name, pid, _queue}|_] = :ets.lookup(@ets_table, user_name) do
+        [{user_name, pid, _queue}|_] = :ets.lookup(@ets_table, user_name)
         User.execute(pid, [message])
     end
 
@@ -138,4 +138,5 @@ defmodule ExBanking do
                 {:error, :sender_does_not_exist}
         end
     end
+
 end
