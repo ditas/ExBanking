@@ -1,7 +1,7 @@
 defmodule User do
     use GenServer
 
-    def start(name) do
+    def start(_name) do
         GenServer.start(__MODULE__, %{})
     end
 
@@ -12,7 +12,7 @@ defmodule User do
     #################### Call ####################
     def handle_call({:deposit, amount, currency}, _from, state) do
 
-        :timer.sleep(3000)
+#        :timer.sleep(3000)
 
         account = Map.get(state, :account)
         {new_amount, state1} = case List.keyfind(account, currency, 0) do
@@ -41,7 +41,7 @@ defmodule User do
     def handle_call({:get_balance, currency}, _from, state) do
         account = Map.get(state, :account)
         reply = case List.keyfind(account, currency, 0) do
-            {currency, current_amount} ->
+            {_currency, current_amount} ->
                 {:ok, balance: current_amount}
             _ ->
                 {:error, :wrong_arguments}

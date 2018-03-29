@@ -44,14 +44,14 @@ defmodule ExBanking do
     end
 
     def deposit(user_name, amount, currency) when is_number(amount) do
-        try_execute(user_name, {:deposit, amount, currency})
+        try_execute(user_name, {:deposit, float_round(amount), currency})
     end
     def deposit(_user_name, _amount, _currency) do
         {:error, :wrong_arguments}
     end
 
     def withdraw(user_name, amount, currency) when is_number(amount) do
-        try_execute(user_name, {:withdraw, amount, currency})
+        try_execute(user_name, {:withdraw, float_round(amount), currency})
     end
     def withdraw(_user_name, _amount, _currency) do
         {:error, :wrong_arguments}
@@ -62,7 +62,8 @@ defmodule ExBanking do
     end
 
     def send(from_user, to_user, amount, currency) when is_number(amount) do
-        do_send(from_user, to_user, amount, currency)
+        do_send(from_user, to_user, float_round(amount), currency)
+            |> IO.inspect()
     end
     def send(_from_user, _to_user, _amount, _currency) do
         {:error, :wrong_arguments}
@@ -115,14 +116,14 @@ defmodule ExBanking do
                                     true ->
 #                                        :ok
                                         case execute(from_user, {:withdraw, amount, currency}) do
-                                            {:ok, [new_balance: from_balance]} ->
+                                            {{:ok, [new_balance: from_balance]}, _queue} ->
                                                 case execute(to_user, {:deposit, amount, currency}) do
-                                                    {:ok, [new_balance: to_balance]} ->
+                                                    {{:ok, [new_balance: to_balance]}, _queue} ->
                                                         {:ok, from_user_balance: from_balance, to_user_balance: to_balance}
-                                                    error -> # TODO: not sure it's okay
+                                                    {error, _queue} -> # TODO: not sure it's okay
                                                         error
                                                 end
-                                            error ->
+                                            {error, _queue} ->
                                                 error
                                         end
                                     false ->
@@ -137,6 +138,13 @@ defmodule ExBanking do
             _ ->
                 {:error, :sender_does_not_exist}
         end
+    end
+
+    defp float_round(number) when is_float(number) do
+        Float.round(number, 2)
+    end
+    defp float_round(number) when is_integer(number) do
+        Float.round(number*1.00, 2)
     end
 
 end
