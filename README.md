@@ -1,21 +1,25 @@
 # ExBanking
 
-**TODO: Add description**
-
-## Installation
-
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `ex_banking` to your list of dependencies in `mix.exs`:
+### How to use
 
 ```elixir
-def deps do
-  [
-    {:ex_banking, "~> 0.1.0"}
-  ]
-end
+iex -S mix
+
+ExBanking.create_user("a")
+ExBanking.create_user("b")
+
+ExBanking.deposit("a", 100, "usd")
+ExBanking.withdraw("a", 50, "usd")
+ExBanking.send("a", "b", 40, "usd")
+```
+### Test
+
+```elixir
+mix test
 ```
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/ex_banking](https://hexdocs.pm/ex_banking).
+### Notes
 
+You can use ExBanking API's functions on the same/another user simultaneously from different external processes.
+
+Check "check queue length" test from ExBankingTest module for details.
