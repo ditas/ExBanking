@@ -1,7 +1,7 @@
 defmodule User do
     use GenServer
 
-    def start(_name) do
+    def start() do
         GenServer.start(__MODULE__, %{})
     end
 
@@ -53,6 +53,11 @@ defmodule User do
     end
 
     #################### Cast ####################
+    def handle_cast({:test, from, client}, state) do
+        :timer.sleep(4000)
+        GenServer.cast(from, {:user_reply, {:ok, :bla_bla}, client})
+        {:noreply, state}
+    end
     def handle_cast(_msg, state) do
         {:noreply, state}
     end
@@ -60,7 +65,6 @@ defmodule User do
     #################### External functions ####################
     def execute(pid, queue) do
         [h|t] = :lists.reverse(queue)
-        reply = GenServer.call(pid, h)
-        {reply, t}
+        GenServer.cast(pid, h)
     end
 end

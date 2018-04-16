@@ -15,11 +15,9 @@ defmodule TestProcess do
     end
 
     #################### Cast ####################
-    def handle_cast({:deposit, data}, state) do
-        {user_name, amount, currency} = data
-
-#        {:ok, [new_balance: _balance]} = ExBanking.deposit(user_name, amount, currency)
-        ExBanking.deposit(user_name, amount, currency)
+    def handle_cast({:test, data}, state) do
+        {user_name, _amount, _currency} = data
+        ExBanking.test(user_name, :test)
             |> IO.inspect()
 
         {:noreply, state}
@@ -30,7 +28,7 @@ defmodule TestProcess do
 
     #################### External functions ####################
     def test(pid, message) do
-        :timer.sleep(1000)
+#        :timer.sleep(1000)
         GenServer.cast(pid, message)
     end
 end
