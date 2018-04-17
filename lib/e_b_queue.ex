@@ -19,9 +19,14 @@ defmodule EBQueue do
                 |> IO.inspect()
         case length(queue) < @queue_limit do
             true ->
-                queue1 = [{message, self(), from}|queue]
+                ref = :erlang.make_ref()
+                queue1 = [{message, self(), from, ref}|queue]
+                    |> IO.inspect()
                 state1 = Map.put(state, :queue, queue1)
-                User.execute(Map.get(state, :user), queue1)
+                    |> IO.inspect()
+
+                [h|t] = :lists.reverse(queue1)
+                User.execute(Map.get(state, :user), h)
                 {:noreply, state1}
             false ->
                 {:reply, {:error, :too_many_requests_to_user}, state}
@@ -32,9 +37,13 @@ defmodule EBQueue do
     end
 
     #################### Cast ####################
-    def handle_cast({:user_reply, reply, client}, state) do
+    def handle_cast({:user_reply, reply, client, ref}, state) do
         GenServer.reply(client, reply)
-        {:noreply, state}
+#            |> IO.inspect()
+
+        queue = Map.get(state, :queue)
+        queue1 = :lists.keydelete(ref, 4, queue)
+        {:noreply, Map.put(state, :queue, queue1)}
     end
     def handle_cast(_msg, state) do
         {:noreply, state}

@@ -25,7 +25,7 @@ defmodule ExBanking do
     #################### External functions ####################
     def create_user(user_name) when is_bitstring(user_name) do
         case :ets.lookup(@ets_table, user_name) do
-            [{user_name, pid, _queue}|_] when pid != :undefined ->
+            [{user_name, pid}|_] when pid != :undefined ->
                 {:error, :user_already_exists}
             _ ->
                 try do
