@@ -53,8 +53,35 @@ defmodule User do
     end
 
     #################### Cast ####################
+    def handle_cast({{:deposit, amount, currency}, from, client, ref}, state) do
+        account = Map.get(state, :account)
+        {new_amount, state1} = case List.keyfind(account, currency, 0) do
+            {currency, current_amount} ->
+                new_amount = current_amount + amount
+                {new_amount, Map.put(state, :account, List.keyreplace(account, currency, 0, {currency, new_amount}))}
+            _ ->
+                {amount, Map.put(state, :account, [{currency, amount}|account])}
+        end
+
+        GenServer.cast(from, {:user_reply, {:ok, [new_balance: new_amount]}, client, ref})
+        {:noreply, state1}
+    end
+    def handle_cast({{:withdraw, amount, currency}, from, client, ref}, state) do
+        account = Map.get(state, :account)
+        {reply, state1} = case List.keyfind(account, currency, 0) do
+            {currency, current_amount} when current_amount >= amount ->
+                new_amount = current_amount - amount
+                {{:ok, new_balance: new_amount}, Map.put(state, :account, List.keyreplace(account, currency, 0, {currency, new_amount}))}
+            _ ->
+                {{:error, :not_enough_money}, state}
+        end
+
+        GenServer.cast(from, {:user_reply, reply, client, ref})
+        {:noreply, state1}
+    end
     def handle_cast({:test, from, client, ref}, state) do
         :timer.sleep(4000)
+
         GenServer.cast(from, {:user_reply, {:ok, :bla_bla}, client, ref})
         {:noreply, state}
     end

@@ -2,12 +2,23 @@ defmodule ExBankingTest do
     use ExUnit.Case
     doctest ExBanking
 
-    test "basic test" do
-        :ok = ExBanking.create_user("a")
-        assert {:error, :user_already_exists} = ExBanking.create_user("a")
+#    test "basic test" do
+#        :ok = ExBanking.create_user("a")
+#
+#        assert {:ok, :bla_bla} = ExBanking.test("a", :test)
+#        assert {:ok, :bla_bla} = ExBanking.test("a", :test)
+#    end
 
-        assert {:ok, :bla_bla} = ExBanking.test("a", :test)
-        assert {:ok, :bla_bla} = ExBanking.test("a", :test)
+    test "basic test 1" do
+        :ok = ExBanking.create_user("b")
+        assert {:error, :user_already_exists} = ExBanking.create_user("b")
+
+        assert {:ok, [new_balance: 10]} = ExBanking.deposit("b", 10, "usd")
+        assert {:ok, [new_balance: 20]} = ExBanking.deposit("b", 10, "usd")
+
+        assert {:ok, [new_balance: 10]} = ExBanking.withdraw("b", 10, "usd")
+        assert {:ok, [new_balance: 0]} = ExBanking.withdraw("b", 10, "usd")
+        assert {:error, :not_enough_money} = ExBanking.withdraw("b", 10, "usd")
     end
 
 #    test "send test" do
@@ -28,25 +39,25 @@ defmodule ExBankingTest do
 #    end
 
     # This is not a real unit test. It shows the error if length exceeds
-#    test "check queue length" do
-#        ExBanking.create_user("a")
-#        ExBanking.create_user("b")
-#
-#        {:ok, pid1} = TestProcess.start()
-#        {:ok, pid2} = TestProcess.start()
-#        {:ok, pid3} = TestProcess.start()
-#        {:ok, pid4} = TestProcess.start()
-#        {:ok, pid5} = TestProcess.start()
-#
-#        TestProcess.test(pid1, {:test, {"a", 10, "usd"}})
-#        TestProcess.test(pid2, {:test, {"a", 10, "usd"}})
-#        TestProcess.test(pid3, {:test, {"a", 10, "usd"}})
-#
-##        TestProcess.test(pid5, {:test, {"b", 10, "usd"}})
-#
-#        TestProcess.test(pid4, {:test, {"a", 10, "usd"}})
-#
-#        :timer.sleep(1000)
-##        ExBanking.clear()
-#    end
+    test "check queue length" do
+        ExBanking.create_user("x")
+        ExBanking.create_user("z")
+
+        {:ok, pid1} = TestProcess.start()
+        {:ok, pid2} = TestProcess.start()
+        {:ok, pid3} = TestProcess.start()
+        {:ok, pid4} = TestProcess.start()
+        {:ok, pid5} = TestProcess.start()
+
+        TestProcess.test(pid1, {:test, {"x", 10, "usd"}})
+        TestProcess.test(pid2, {:test, {"x", 10, "usd"}})
+        TestProcess.test(pid3, {:test, {"x", 10, "usd"}})
+
+#        TestProcess.test(pid5, {:test, {"z", 10, "usd"}})
+
+        TestProcess.test(pid4, {:test, {"x", 10, "usd"}})
+
+        :timer.sleep(1000)
+#        ExBanking.clear()
+    end
 end

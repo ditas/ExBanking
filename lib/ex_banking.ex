@@ -46,11 +46,24 @@ defmodule ExBanking do
         try_execute(user_name, message)
     end
 
+    def deposit(user_name, amount, currency) when is_number(amount) do
+        try_execute(user_name, {:deposit, amount, currency})
+    end
+    def deposit(_user_name, _amount, _currency) do
+        {:error, :wrong_arguments}
+    end
+
+    def withdraw(user_name, amount, currency) when is_number(amount) do
+        try_execute(user_name, {:withdraw, amount, currency})
+    end
+    def withdraw(_user_name, _amount, _currency) do
+        {:error, :wrong_arguments}
+    end
+
     defp try_execute(user_name, message) do
         case :ets.lookup(@ets_table, user_name) do
             [{user_name, pid}|_] when pid != :undefined ->
                 GenServer.call(pid, message)
-                    |> IO.inspect()
             _ ->
                 {:error, :user_does_not_exist}
         end

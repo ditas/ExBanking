@@ -16,14 +16,14 @@ defmodule EBQueue do
     #################### Call ####################
     def handle_call(message, from, state) do
         queue = Map.get(state, :queue)
-                |> IO.inspect()
+            |> IO.inspect()
         case length(queue) < @queue_limit do
             true ->
                 ref = :erlang.make_ref()
                 queue1 = [{message, self(), from, ref}|queue]
-                    |> IO.inspect()
+#                    |> IO.inspect()
                 state1 = Map.put(state, :queue, queue1)
-                    |> IO.inspect()
+#                    |> IO.inspect()
 
                 [h|t] = :lists.reverse(queue1)
                 User.execute(Map.get(state, :user), h)
