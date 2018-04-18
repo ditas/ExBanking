@@ -1,7 +1,7 @@
 defmodule EBQueue do
     use GenServer
 
-    @queue_limit 2
+    @queue_limit 10
 
     def start(_name) do
         GenServer.start(__MODULE__, %{})

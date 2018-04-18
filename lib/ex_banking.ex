@@ -46,14 +46,14 @@ defmodule ExBanking do
         try_execute(user_name, message)
     end
 
-    def deposit(user_name, amount, currency) when is_number(amount) do
+    def deposit(user_name, amount, currency) when is_number(amount) and (amount >= 0) do
         try_execute(user_name, {:deposit, int_precision(amount), currency})
     end
     def deposit(_user_name, _amount, _currency) do
         {:error, :wrong_arguments}
     end
 
-    def withdraw(user_name, amount, currency) when is_number(amount) do
+    def withdraw(user_name, amount, currency) when is_number(amount) and (amount >= 0) do
         try_execute(user_name, {:withdraw, int_precision(amount), currency})
     end
     def withdraw(_user_name, _amount, _currency) do
@@ -64,7 +64,7 @@ defmodule ExBanking do
         try_execute(user_name, {:get_balance, currency})
     end
 
-    def send(from_user, to_user, amount, currency) when is_number(amount) do
+    def send(from_user, to_user, amount, currency) when is_number(amount) and (amount >= 0) do
         do_send(from_user, to_user, int_precision(amount), currency)
 #            |> IO.inspect()
     end
